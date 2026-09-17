@@ -8,45 +8,46 @@
 </head>
 <body>
 <header class="top">
-  <div class="brand"><div class="bolt">⚡</div><div><h1>Simulasi Rangkaian Listrik</h1><p>Susun, hubungkan, dan ubah nilai komponen sesuai keinginanmu!</p></div></div>
+  <div class="brand"><div class="bolt">⚡</div><div><h1>Simulasi Rangkaian Listrik</h1><p>Seret komponen ke kanvas, lalu hubungkan terminal untuk membuat rangkaian.</p></div></div>
   <div class="top-actions">
-    <button id="saveBtn">💾 Simpan</button>
-    <button id="resetBtn">↻ Reset</button>
+    <button id="saveBtn" type="button">💾 Simpan</button>
+    <button id="resetBtn" type="button">↻ Reset</button>
   </div>
 </header>
 
 <div class="app">
 <aside class="palette">
   <h2>Komponen</h2>
-  <div class="drag-note">Klik tombol untuk menambahkan komponen.</div>
-  <button class="item" data-type="battery"><span>🔋</span><b>Baterai</b><small>1–24 V</small></button>
-  <button class="item" data-type="resistor"><span>▱</span><b>Resistor</b><small>1–100 Ω</small></button>
-  <button class="item" data-type="lamp"><span>💡</span><b>Lampu</b><small>1–100 Ω</small></button>
-  <button class="item" data-type="switch"><span>⏻</span><b>Saklar</b><small>ON / OFF</small></button>
-  <button class="item" id="wireModeBtn"><span>🔌</span><b>Sambung Kabel</b><small>Klik terminal satu per satu</small></button>
-  <button class="item" id="junctionBtn"><span>●</span><b>Titik Percabangan</b><small>Bisa dipindahkan</small></button>
-  <button class="clear" id="clearBtn">🗑 Hapus Semua</button>
+  <div class="drag-note">Seret ikon komponen ke kanvas.</div>
+  <div class="item" draggable="true" data-type="battery"><span>🔋</span><b>Baterai</b><small>1–24 V</small></div>
+  <div class="item" draggable="true" data-type="resistor"><span>▱</span><b>Resistor</b><small>1–100 Ω</small></div>
+  <div class="item" draggable="true" data-type="lamp"><span>💡</span><b>Lampu</b><small>1–100 Ω</small></div>
+  <div class="item" draggable="true" data-type="switch"><span>⏻</span><b>Saklar</b><small>ON / OFF</small></div>
+  <div class="item" draggable="true" data-type="junction"><span>●</span><b>Titik Percabangan</b><small>Untuk rangkaian paralel</small></div>
+  <div class="palette-hint">Untuk memindahkan komponen yang sudah ada, seret komponennya di kanvas.</div>
+  <button class="clear" id="clearBtn" type="button">🗑 Hapus Semua</button>
 </aside>
 
 <main class="center">
   <div id="board">
-    <div id="workspace"><svg id="wireLayer"></svg></div>
-    <div id="empty">Tambahkan komponen, kemudian sambungkan terminal-terminalnya.</div>
+    <div id="workspace">
+      <svg id="wireLayer" viewBox="0 0 1100 680" preserveAspectRatio="none"></svg>
+    </div>
+    <div id="empty">Seret komponen dari kiri ke sini.</div>
     <div id="message"></div>
   </div>
   <div class="bottom-tools">
-    <button id="selectTool" class="active">↖ <b>Pilih / Pindah</b><small>Geser komponen atau titik cabang</small></button>
-    <button id="connectTool">🔗 <b>Sambung Kabel</b><small>Klik terminal → terminal</small></button>
-    <button id="cutTool">✂ <b>Putus Kabel</b><small>Klik kabel untuk memilih</small></button>
-    <button id="deleteTool">🗑 <b>Hapus Komponen</b><small>Klik komponen yang akan dihapus</small></button>
-<button id="rotateTool">↻ <b>Putar 90°</b><small>Pilih komponen lalu tekan</small></button>
+    <button id="selectTool" class="active" type="button">↖ <b>Pilih / Pindah</b><small>Seret komponen atau titik cabang</small></button>
+    <button id="connectTool" type="button">🔗 <b>Sambung Kabel</b><small>Klik terminal → terminal</small></button>
+    <button id="cutTool" type="button">✂ <b>Putus Kabel</b><small>Klik kabel untuk memutus</small></button>
+    <button id="deleteTool" type="button">🗑 <b>Hapus Komponen</b><small>Klik komponen yang akan dihapus</small></button>
   </div>
 </main>
 
 <aside class="right">
   <section class="card">
     <h2>Pengaturan Komponen</h2>
-    <div id="nonePanel">Pilih komponen di papan.</div>
+    <div id="nonePanel">Seret komponen ke papan atau pilih komponen yang sudah ada.</div>
     <div id="editor" hidden></div>
   </section>
   <section class="card">
@@ -58,8 +59,8 @@
     <div id="results">Rangkaian belum tertutup.</div>
   </section>
   <section class="card actions">
-    <button id="runBtn" class="run">▶ Jalankan</button>
-    <button id="stopBtn">■ Berhenti</button>
+    <button id="runBtn" class="run" type="button">▶ Jalankan</button>
+    <button id="stopBtn" type="button">■ Berhenti</button>
   </section>
 </aside>
 </div>
