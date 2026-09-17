@@ -1,36 +1,24 @@
-const board=document.getElementById('board'),svg=document.getElementById('wires');let C=[],W=[],J=[],sel=null,tool='select',start=null,drag=null,running=false,nid=1;const D={battery:['🔋','Baterai','V',12],resistor:['▱','Resistor','Ω',6],lamp:['💡','Lampu','Ω',6],switch:['⏻','Saklar','',1]};document.querySelectorAll('.add[data-type]').forEach(b=>b.onclick=()=>add(b.dataset.type));function add(t){let d=D[t],c={id:nid++,type:t,name:t==='battery'?d[1]:d[1]+' '+(C.filter(x=>x.type===t).length+1),value:d[3],x:70+(C.length%5)*145,y:100+Math.floor(C.length/5)*125,on:true,rot:0};C.push(c);sel=c.id;render();editor();calc()}document.getElementById('addJ').onclick=()=>{J.push({id:'j'+nid++,x:300+J.length*120,y:350});render();toast('Titik percabangan dibuat')};function setTool(t){tool=t;start=null;document.querySelectorAll('.tools button').forEach(b=>b.classList.remove('active'));document.getElementById(t).classList.add('active');render()}document.getElementById('select').onclick=()=>setTool('select');document.getElementById('connect').onclick=()=>setTool('connect');document.getElementById('cut').onclick=()=>setTool('cut');document.getElementById('delete').onclick=()=>setTool('delete');document.getElementById('rotate').onclick=()=>{let c=C.find(x=>x.id===sel);if(c){c.rot=(c.rot+180)%360;render();editor();toast('Komponen diputar 180°')}else toast('Pilih komponen terlebih dahulu')};function pt(k){let [a,s]=String(k).split(':');let c=C.find(x=>String(x.id)===a);if(c){let r=c.rot===180;return{x:c.x+(s==='L'?(r?120:0):(r?0:120)),y:c.y+44}}let j=J.find(x=>x.id===a);return j?{x:j.x,y:j.y}:null}function addW(a,b){if(a&&b&&a!==b&&!W.some(w=>(w.a===a&&w.b===b)||(w.a===b&&w.b===a)))W.push({id:Date.now()+Math.random(),a,b})}function render(){document.querySelectorAll('.component,.junction').forEach(e=>e.remove());C.forEach(c=>{let e=document.createElement('div');e.className='component '+(sel===c.id?'selected ':'')+(c.type==='lamp'&&running&&current(c.id)>0?'lampOn':'');e.style.left=c.x+'px';e.style.top=c.y+'px';e.style.transform='rotate('+c.rot+'deg)';e.innerHTML='<div class="terminal left" data-k="'+c.id+':L"></div><div class="terminal right" data-k="'+c.id+':R"></div><div class="title">'+esc(c.name)+'</div><div class="visual">'+D[c.type][0]+'</div><div class="value">'+(c.type==='switch'?(c.on?'ON':'OFF'):c.value+' '+D[c.type][2])+'</div>';e.querySelectorAll('.terminal').forEach(t=>t.onclick=term);e.onpointerdown=v=>{if(tool!=='select'||v.target.classList.contains('terminal'))return;sel=c.id;editor();let r=board.getBoundingClientRect();drag={o:c,dx:v.clientX-r.left-c.x,dy:v.clientY-r.top-c.y};v.preventDefault()};e.onclick=v=>{if(v.target.classList.contains('terminal'))return;if(tool==='delete')delC(c.id);else if(tool==='select'){sel=c.id;editor();render()}};e.ondblclick=()=>{if(c.type==='switch'){c.on=!c.on;render();calc()}};board.appendChild(e)});J.forEach(j=>{let e=document.createElement('div');e.className='junction';e.style.left=j.x+'px';e.style.top=j.y+'px';e.onpointerdown=v=>{if(tool!=='select')return;let r=board.getBoundingClientRect();drag={o:j,dx:v.clientX-r.left-j.x,dy:v.clientY-r.top-j.y};v.preventDefault()};e.onclick=v=>{v.stopPropagation();if(tool==='delete')delJ(j.id);else if(tool==='connect'){let k=j.id+':J';if(!start){start=k;toast('Titik pertama dipilih')}else{addW(start,k);start=null;render();calc()}}};board.appendChild(e)});draw();document.getElementById('hint').style.display=C.length?'none':'block'}function term(e){e.stopPropagation();if(tool!=='connect')return;let k=e.currentTarget.dataset.k;if(!start){start=k;toast('Terminal pertama dipilih')}else{addW(start,k);start=null;render();calc()}}function draw(){svg.innerHTML='';W.forEach(w=>{let a=pt(w.a),b=pt(w.b);if(!a||!b)return;let p=document.createElementNS('http://www.w3.org/2000/svg','path'),m=(a.x+b.x)/2;p.setAttribute('d',`M${a.x} ${a.y} C${m} ${a.y},${m} ${b.y},${b.x} ${b.y}`);p.classList.add('wire');if(running)p.classList.add('power');p.onclick=e=>{e.stopPropagation();if(tool==='cut'){W=W.filter(x=>x.id!==w.id);render();calc();toast('Kabel diputus')}};svg.appendChild(p)})}board.onpointermove=e=>{if(!drag)return;let r=board.getBoundingClientRect();drag.o.x=Math.max(8,Math.min(board.clientWidth-(drag.o.type?125:8),e.clientX-r.left-drag.dx));drag.o.y=Math.max(8,Math.min(board.clientHeight-(drag.o.type?92:8),e.clientY-r.top-drag.dy));render()};onpointerup=()=>drag=null;function delC(id){C=C.filter(c=>c.id!==id);W=W.filter(w=>!String(w.a).startsWith(id+':')&&!String(w.b).startsWith(id+':'));sel=null;render();editor();calc()}function delJ(id){J=J.filter(j=>j.id!==id);W=W.filter(w=>!String(w.a).startsWith(id+':')&&!String(w.b).startsWith(id+':'));render();calc()}document.getElementById('clear').onclick=()=>{if(confirm('Hapus semua?')){C=[];W=[];J=[];sel=null;render();editor();calc()}};document.getElementById('reset').onclick=()=>{C=[];W=[];J=[];sel=null;running=false;render();editor();calc()};document.getElementById('run').onclick=()=>{running=true;calc()};document.getElementById('stop').onclick=()=>{running=false;calc()};document.getElementById('battery').oninput=()=>{let b=C.find(c=>c.type==='battery');if(b){b.value=+document.getElementById('battery').value||12;calc()}};function editor(){let c=C.find(x=>x.id===sel),e=document.getElementById('editor');if(!c){e.textContent='Pilih komponen di papan.';return}e.innerHTML='<div style="font-size:38px;text-align:center">'+D[c.type][0]+'</div><b>'+esc(c.name)+'</b><label>Nama<input id="en" value="'+esc(c.name)+'"></label><label>Nilai ('+D[c.type][2]+')<input id="ev" type="number" value="'+c.value+'"></label><button id="apply">Terapkan</button><button id="turn">Putar 180°</button><button id="remove">Hapus</button>';document.getElementById('apply').onclick=()=>{c.name=en.value||c.name;c.value=+ev.value||c.value;if(c.type==='battery')document.getElementById('battery').value=c.value;render();editor();calc()};document.getElementById('turn').onclick=()=>{c.rot=(c.rot+180)%360;render();editor()};document.getElementById('remove').onclick=()=>delC(c.id)}
-function terminalKey(c, side){ return c.id+':'+side; }
-
-function makeCircuitGraph(){
- const parent=new Map();
- const find=x=>{
-   if(!parent.has(x)) parent.set(x,x);
-   let p=parent.get(x);
-   if(p!==x){p=find(p);parent.set(x,p)}
-   return p;
- };
- const union=(a,b)=>{
-   const ra=find(a), rb=find(b);
-   if(ra!==rb) parent.set(ra,rb);
- };
-
- // Every component terminal and junction is a graph node.
- C.forEach(c=>{find(terminalKey(c,'L'));find(terminalKey(c,'R'))});
- J.forEach(j=>find(j.id+':J'));
-
- // A wire joins two terminals/nodes.
- W.forEach(w=>union(w.a,w.b));
-
- const nodeOf=k=>find(k);
-
- // Build component edges between contracted wire nodes.
- const edges=[];
- C.forEach(c=>{
-   if(c.type==='switch' && !c.on) return; // open switch
-   const a=nodeOf(terminalKey(c,'L')), b=nodeOf(terminalKey(c,'R'));
-   if(a!==b) edges.push({id:c.id,a,b,c});
- });
- return {nodeOf,edges};
+const board=document.getElementById('board');
+let workspace=document.getElementById('workspace');
+if(!workspace){
+ workspace=document.createElement('div');
+ workspace.id='workspace';
+ const oldSvg=document.getElementById('wires');
+ board.insertBefore(workspace,oldSvg);
+ workspace.appendChild(oldSvg);
+}
+const svg=document.getElementById('wires');
+const WORK_W=1800, WORK_H=1100;let C=[],W=[],J=[],sel=null,tool='select',start=null,drag=null,running=false,nid=1;const D={battery:['🔋','Baterai','V',12],resistor:['▱','Resistor','Ω',6],lamp:['💡','Lampu','Ω',6],switch:['⏻','Saklar','',1]};document.querySelectorAll('.add[data-type]').forEach(b=>b.onclick=()=>add(b.dataset.type));function add(t){let d=D[t],c={id:nid++,type:t,name:t==='battery'?d[1]:d[1]+' '+(C.filter(x=>x.type===t).length+1),value:d[3],x:80+(C.length%7)*220,y:90+Math.floor(C.length/7)*150,on:true,rot:0};C.push(c);sel=c.id;render();editor();calc()}document.getElementById('addJ').onclick=()=>{J.push({id:'j'+nid++,x:300+J.length*120,y:350});render();toast('Titik percabangan dibuat')};function setTool(t){tool=t;start=null;document.querySelectorAll('.tools button').forEach(b=>b.classList.remove('active'));document.getElementById(t).classList.add('active');render()}document.getElementById('select').onclick=()=>setTool('select');document.getElementById('connect').onclick=()=>setTool('connect');document.getElementById('cut').onclick=()=>setTool('cut');document.getElementById('delete').onclick=()=>setTool('delete');document.getElementById('rotate').onclick=()=>{let c=C.find(x=>x.id===sel);if(c){c.rot=(c.rot+180)%360;render();editor();toast('Komponen diputar 180°')}else toast('Pilih komponen terlebih dahulu')};function pt(k){
+ const [a,side]=String(k).split(':');
+ const c=C.find(x=>String(x.id)===a);
+ if(c){
+   const ang=(c.rot||0)*Math.PI/180;
+   const cx=c.x+60, cy=c.y+44;
+   const localX=(side==='L'?-60:60);
+   return {x:cx+localX*Math.cos(ang),y:cy+localX*Math.sin(ang)};
+ }
+ const j=J.find(x=>x.id===a);
+ return j?{x:j.x,y:j.y}:null;
 }
 
 function hasPath(adj, from, to, blockedId){
@@ -143,9 +131,28 @@ function calc(){
  '<div>Hambatan Total (Rₜ): <b>'+s.rt.toFixed(2)+' Ω</b></div>'+
  '<div>Arus Total: <b>'+s.total.toFixed(3)+' A</b></div><hr>'+
  C.filter(c=>c.type==='resistor'||c.type==='lamp').map(c=>
- '<div>'+esc(c.name)+': '+current(c.id).toFixed(3)+' A'+
- (s.state.active.has(c.id)?' • aktif':' • tidak dialiri')+'</div>').join('');
+ '<div><b>'+esc(c.name)+'</b> — Tegangan: <b>'+((s.state.active.has(c.id)?current(c.id)*c.value:0)).toFixed(2)+' V</b> | Arus: <b>'+current(c.id).toFixed(3)+' A</b>'+
+ (s.state.active.has(c.id)?' • aktif':' • mati')+'</div>').join('');
  render();
 }
 
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}function toast(t){let x=document.getElementById('toast');x.textContent=t;x.style.display='block';clearTimeout(window.tt);window.tt=setTimeout(()=>x.style.display='none',1500)}render();editor();calc();
+
+// V9: geser canvas rangkaian dengan tombol tengah mouse atau Space + drag.
+board.addEventListener('pointerdown',function(e){
+ if(e.target.closest('.component,.junction,.terminal,button,input')) return;
+ if(e.button===1 || spaceDown){
+   pan={x:e.clientX,y:e.clientY,sx:board.scrollLeft,sy:board.scrollTop};
+   board.classList.add('panning'); e.preventDefault();
+ }
+});
+window.addEventListener('pointermove',function(e){
+ if(!pan)return;
+ board.scrollLeft=pan.sx-(e.clientX-pan.x);
+ board.scrollTop=pan.sy-(e.clientY-pan.y);
+});
+window.addEventListener('pointerup',function(){
+ if(pan){pan=null;board.classList.remove('panning')}
+});
+window.addEventListener('keydown',function(e){if(e.code==='Space')spaceDown=true});
+window.addEventListener('keyup',function(e){if(e.code==='Space')spaceDown=false});
